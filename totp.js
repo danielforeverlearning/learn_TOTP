@@ -89,6 +89,14 @@ function getHexRepresentation(numbigint, symbols) {
     return result;
 }
 
+function givemeunixepochtimechunks30seconds()
+{
+    const now = new Date();
+    const myreturnint = Math.floor(now.getTime() / 30000);
+
+    return myreturnint;
+}
+
 function calculate(key)
 {
     var ii;
@@ -101,8 +109,12 @@ function calculate(key)
             n += tempbigint;
         }
         console.log("n = " + n + " = " + getHexRepresentation(n, 40));
+
+        var testtime = givemeunixepochtimechunks30seconds();
+        console.log("testtime = " + getHexRepresentation(BigInt(testtime), 16));
     }
     catch(err) {
         console.log("ERROR: " + err);
     }
 }
+
