@@ -15,6 +15,8 @@ class TOTP
 
     private static function base32Decode( $in )
     {
+		//chr — Generate a single-byte string from a number
+		
         $l = strlen( $in );
         $n = $bs = 0;
 
@@ -41,10 +43,10 @@ class TOTP
         $seed = self::base32Decode( $secret );
 		
 		printf("gettype(seed) = %s\n", gettype($seed));
-		printf("seed = %s\n", $seed);
-		$hex_seed = bin2hex($seed);
-		echo "bin2hex of seed = ";
-        echo $hex_seed;
+		printf("seed = %s = \n", $seed);
+		$seedhexstr = bin2hex($seed);
+		echo "seedhexstr = ";
+        echo $seedhexstr;
 		echo "\n";
 		echo "\n";
 		
@@ -68,14 +70,47 @@ class TOTP
 		
 		printf("gettype(time) = %s\n", gettype($time));
 		printf("time = %s\n", $time);
-		$hex_time = bin2hex($time);
-		echo "bin2hex of time = ";
-        echo $hex_time;
+		$testtimehexstr = bin2hex($time);
+		echo "testtimehexstr = ";
+        echo $testtimehexstr;
 		echo "\n";
 		echo "\n";
 		
 		
         $hash = hash_hmac( 'sha1', $time, $seed, false );
+		
+		//The PHP function hash_hmac() generates a keyed hash value 
+		//using the HMAC (Hash-based Message Authentication Code) method. 
+		//This function is commonly used for message authentication and integrity verification.
+		//
+		//string hash_hmac(string $algo, string $data, string $key, bool $binary = false)
+		//
+		//Parameters:
+        //$algo: The name of the selected hashing algorithm (e.g., "sha256", "md5", "sha1"). You can retrieve a list of supported algorithms using hash_hmac_algos().
+        //$data: The message or data to be hashed.
+        //$key: The secret key used for the HMAC calculation.
+        //$binary: An optional boolean parameter. 
+		//         If set to true, the function returns the raw binary representation of the message digest. 
+		//         If false (default), it returns the digest as lowercase hexadecimal characters. 
+		
+		/****************************************************************************
+		While implementing a TOTP application, please note that hash_hmac() must receive data in binary, 
+		not in a hexadecimal string, to generate a valid OTP across platforms.
+		This problem can be easily fixed by converting a hexadecimal string to its binary form before passing it to hash_hmac().
+
+		<?php
+			$time = hex2bin('0000000003523f77'); // time must be in this "hexadecimal and padded" form
+			$key = hex2bin('bb57d1...'); // 160-bits = 40-digit hexadecimal (4 bits) = 32-digit base32 (5 bits)
+
+			hash_hmac('sha1', $time, $key);
+		?>
+		*****************************************************************************/
+		
+		printf("hash = %s\n", $hash);
+
+		
+		
+		
         $otp = ( hexdec(substr($hash, hexdec($hash[39]) * 2, 8)) & 0x7fffffff ) % pow( 10, $digits );
 
         return [ 'otp'=>sprintf("%'0{$digits}u", $otp) ];
