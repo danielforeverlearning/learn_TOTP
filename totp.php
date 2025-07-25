@@ -42,13 +42,39 @@ class TOTP
 		
 		printf("gettype(seed) = %s\n", gettype($seed));
 		printf("seed = %s\n", $seed);
-		$hex_format = bin2hex($seed);
+		$hex_seed = bin2hex($seed);
 		echo "bin2hex of seed = ";
-        echo $hex_format;
+        echo $hex_seed;
 		echo "\n";
 		echo "\n";
 		
-        $time = str_pad( pack('N', intval(time() / $period) + $offset ), 8, "\x00", STR_PAD_LEFT );
+		//time()
+		//Returns the current time measured in the number of seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
+        
+		//intval(mixed $value, int $base = 10): int
+		//Returns the int value of value, using the specified base for the conversion (the default is base 10). intval() should not be used on objects, as doing so will emit an E_WARNING level error and return 1.
+		
+		$testtime = time();
+		printf("testtime = %d\n", $testtime);
+		$testpack = pack('N', intval($testtime / 30));
+		printf("testpack = %s\n", $testpack);
+		$hextestpack = bin2hex($testpack);
+		echo "hextestpack = ";
+        echo $hextestpack;
+		echo "\n";
+		echo "\n";
+		
+		$time = str_pad( pack('N', intval(time() / $period) + $offset ), 8, "\x00", STR_PAD_LEFT );
+		
+		printf("gettype(time) = %s\n", gettype($time));
+		printf("time = %s\n", $time);
+		$hex_time = bin2hex($time);
+		echo "bin2hex of time = ";
+        echo $hex_time;
+		echo "\n";
+		echo "\n";
+		
+		
         $hash = hash_hmac( 'sha1', $time, $seed, false );
         $otp = ( hexdec(substr($hash, hexdec($hash[39]) * 2, 8)) & 0x7fffffff ) % pow( 10, $digits );
 
@@ -90,7 +116,7 @@ class TOTP
 }
 
 printf("hi .....\n");
-$myarray = TOTP::getOTP("");
+$myarray = TOTP::getOTP("DFXMZJSEU2GK6PHLP7SPDB2IERS7N57L");
 printf("%s\n\n", $myarray["otp"]);
 
 
