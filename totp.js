@@ -1,3 +1,46 @@
+//maybe do it in nodejs too tired can not think
+/*******************************
+const crypto = require('crypto');
+
+function hashHmacJs(algo, data, key, raw_output = false) {
+  const hmac = crypto.createHmac(algo, key);
+  hmac.update(data);
+  const digest = hmac.digest(raw_output ? 'binary' : 'hex');
+  return digest;
+}
+
+// Example usage:
+const key = 'mysecretkey';
+const message = 'Hello, world!';
+const algorithm = 'sha256';
+
+// Equivalent to hash_hmac('sha256', 'Hello, world!', 'mysecretkey')
+const hexOutput = hashHmacJs(algorithm, message, key);
+console.log('Hex output:', hexOutput);
+
+// Equivalent to base64_encode(hash_hmac('sha256', 'Hello, world!', 'mysecretkey', true))
+const rawOutput = hashHmacJs(algorithm, message, key, true);
+const base64Output = Buffer.from(rawOutput, 'binary').toString('base64');
+console.log('Base64 output:', base64Output);
+ ***********************************/
+
+
+
+
+function hex2bin(hexString) {
+  let result = '';
+  for (let i = 0; i < hexString.length; i += 2) {
+    const hexByte = hexString.substring(i, i + 2);
+    const decimalValue = parseInt(hexByte, 16);
+    if (isNaN(decimalValue)) {
+      // Handle invalid hex characters if necessary
+      return false; // Or throw an error
+    }
+    result += String.fromCharCode(decimalValue);
+  }
+  return result;
+}
+
 function base32DecodeOneLowerChar(strsizeone) {
     if (strsizeone.toLowerCase().charAt(0) == "a")
     	return BigInt(0);
@@ -97,7 +140,56 @@ function givemeunixepochtimechunks30seconds()
     return myreturnint;
 }
 
-function calculate(key)
+function convertBigIntToUTF8Str(myBigInt)
+{
+    const byteLength = Math.ceil(myBigInt.toString(16).length / 2);
+    const uint8Array = new Uint8Array(byteLength);
+
+    for (let i = 0; i < byteLength; i++) {
+        uint8Array[byteLength - 1 - i] = Number((myBigInt >> BigInt(i * 8)) & 0xFFn);
+    }
+
+    const decoder = new TextDecoder('utf-8');
+    const utf8String = decoder.decode(uint8Array);
+
+    return utf8String;
+}
+
+//Browsers (Web Cryptography API):
+//The Web Cryptography API provides the SubtleCrypto interface 
+//for cryptographic operations, including HMAC generation.
+async function js_hash_hmac_browser(algo, data, key, raw_output = false) {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(key);
+    const dataData = encoder.encode(data);
+
+    const importedKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: { name: algo.toUpperCase() } },
+        false,
+        ['sign']
+    );
+
+    const signature = await crypto.subtle.sign(
+        'HMAC',
+        importedKey,
+        dataData
+    );
+
+    if (raw_output) {
+        // Return ArrayBuffer for raw output
+        return signature;
+    } else {
+        // Convert ArrayBuffer to hex string
+        return Array.from(new Uint8Array(signature))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+}
+
+
+async function calculate(key)
 {
     var ii;
     var tempbigint;
@@ -108,10 +200,32 @@ function calculate(key)
             tempbigint = base32DecodeOneLowerChar(key.charAt(ii));
             n += tempbigint;
         }
-        console.log("n = " + n + " = " + getHexRepresentation(n, 40));
+        console.log("n = " + n);
+        var seedutf8str = convertBigIntToUTF8Str(n);
+        console.log("seedutf8str = " + seedutf8str);
+        var seedhexstr = getHexRepresentation(n, 40);
+        console.log("seedhexstr = " + seedhexstr);
 
         var testtime = givemeunixepochtimechunks30seconds();
-        console.log("testtime = " + getHexRepresentation(BigInt(testtime), 16));
+        var testtimehexstr = getHexRepresentation(BigInt(testtime), 16);
+        console.log("testtimehexstr = " + testtimehexstr);
+        //var testtimeutf8str = hex2bin(testtimehexstr); DID NOT WORK
+        var testtimeutf8str = convertBigIntToUTF8Str(BigInt(testtime));
+
+        // Example usage (in an async function or IIFE):
+        //(async () => {
+            //const key = 'my_secret_key';
+            //const message = 'Hello, world!';
+
+            //const hex_hmac = await js_hash_hmac_browser('sha256', message, key);
+            const hex_hmac = await js_hash_hmac_browser('SHA-1', testtime, n);
+            console.log('Hex HMAC (Browser):', hex_hmac);
+
+            //const raw_hmac = await js_hash_hmac_browser('sha256', message, key, true);
+            //const base64_hmac = btoa(String.fromCharCode(...new Uint8Array(raw_hmac)));
+            //console.log('Base64 HMAC (Browser):', base64_hmac);
+        //})();
+
     }
     catch(err) {
         console.log("ERROR: " + err);
