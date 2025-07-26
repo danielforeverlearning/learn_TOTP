@@ -115,7 +115,7 @@ function base32DecodeOneLowerChar(strsizeone) {
 function savekey() {
      var SavedKey = document.getElementById("mykey").value;
      console.log(SavedKey);
-     calculate(SavedKey);
+     calculate(SavedKey, 6);
 }
 
 //32 ascii-base32encoded-character x 5 bits per ascii-base32encoded-character ==
@@ -182,7 +182,7 @@ async function js_hash_hmac_browser(algo, dataData, keyData, raw_output = false)
 }
 
 
-async function calculate(key)
+async function calculate(key, digits)
 {
     var ii;
     var tempbigint;
@@ -223,8 +223,20 @@ async function calculate(key)
         counterdata = ConvertHexStrToUint8ArrayBigEndian(counterhexstr);
 
 
-        const hash = await js_hash_hmac_browser('SHA-1', counterdata, keyseed, false);
-
+        const hashhexstr = await js_hash_hmac_browser('SHA-1', counterdata, keyseed, false);
+		
+		var myoffset = parseInt(hashhexstr[39], 16) * 2;
+		console.log("myoffset = " + myoffset);
+		var mysubstr = hashhexstr.substring(myoffset, myoffset + 8);
+		console.log("mysubstr = " + mysubstr);
+		var mynum = parseInt(mysubstr, 16);
+		console.log("mynum = " + mynum);
+		var mynummasked = mynum & 0x7fffffff;
+		console.log("mynummasked = " + mynummasked);
+		var pownum = Math.pow( 10, digits );
+		console.log("pownum = " + pownum);
+		var myotp = mynummasked % pownum;
+		console.log("myotp = " + myotp + " = " + String(myotp).padStart(6, '0'));
     }
     catch(err) {
         console.log("ERROR: " + err);
