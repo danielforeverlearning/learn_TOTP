@@ -116,10 +116,18 @@ class TOTP
 		?>
 		*****************************************************************************/
 		
-		
-
-		
-		
+		$myoffset = hexdec($hash_false[39]) * 2;
+		printf("myoffset = %d\n", $myoffset);
+		$mysubstr = substr($hash_false, $myoffset, 8);
+		printf("mysubstr = %s\n", $mysubstr);
+		$mynum = hexdec($mysubstr);
+		printf("mynum = %d\n", $mynum);
+		$mynummasked = $mynum & 0x7fffffff;
+		printf("mynummasked = %d\n", $mynummasked);
+		$pownum = pow( 10, $digits );
+		printf("pownum = %d\n", $pownum);
+		$myotp = $mynummasked % $pownum;
+		printf("myotp = %u = %'0{$digits}u\n\n", $myotp, $myotp);
 		
         $otp = ( hexdec(substr($hash_false, hexdec($hash_false[39]) * 2, 8)) & 0x7fffffff ) % pow( 10, $digits );
 
